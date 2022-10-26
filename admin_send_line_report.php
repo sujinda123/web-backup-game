@@ -20,6 +20,9 @@ if (!$_SESSION["UserID"]){  //check session
 
     $result_building_list = mysqli_query($con,$sql_building_list);
 
+    $sql_year_list = "SELECT YEAR(date) as year FROM data_power WHERE building_id = ".$building_id." GROUP BY year ORDER BY data_power.id DESC";
+    $result_year_list = mysqli_query($con,$sql_year_list);
+
 ?>
 
 <!doctype html>
@@ -40,7 +43,8 @@ if (!$_SESSION["UserID"]){  //check session
         <form method="POST" action="">
             <div class="input-group mb-3">
                 <input type="text" class="form-control" id="search_building" name="search_building"
-                    placeholder="ค้นหาชื่ออาคาร" aria-label="search_building" aria-describedby="button-addon2" value="<?=$search_building?>">
+                    placeholder="ค้นหาชื่ออาคาร" aria-label="search_building" aria-describedby="button-addon2"
+                    value="<?=$search_building?>">
                 <button class="btn btn-outline-secondary" type="submit">ค้นหา</button>
             </div>
         </form>
@@ -59,7 +63,9 @@ if (!$_SESSION["UserID"]){  //check session
                 ?>
                 <tr>
                     <td><?=$building[name]?></td>
-                    <td><button type='button' class='btn btn-info' onclick='SetSendLine("<?=$building[line_token]?>")' data-bs-toggle='modal' data-bs-target='#ModalSendRePort'>Send</button></td>
+                    <td><a
+                            href="admin_selete_year_month_send_line_report.php?building_id=<?=$building[id]?>&building_name=<?=$building[name]?>&building_token=<?=$building[line_token]?>"><button
+                                type='button' class='btn btn-info'>View</button></a></td>
                 </tr>
                 <?php
                     }
@@ -68,72 +74,58 @@ if (!$_SESSION["UserID"]){  //check session
         </table>
     </div>
 
-    <!-- Modal Edit Power -->
-    <div class="modal fade" id="ModalEditPower" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">หน้าแก้ไขผู้ใช้งาน</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form class="mui-form" name="frmdeletepower" method="post" action="save_edit_power.php">
-                    <input type="hidden" class="form-control" id="edit_power_id" name="edit_power_id" value="" />
-                    <div class="modal-body">
-                        <table class="table">
-                            <tbody>
-                                <tr>
-                                    <th scope="row">หน่วยการใช้ไฟช่วงเช้า</th>
-                                    <td><input type="text" class="form-control" id="edit_unit_forenoon"
-                                            name="edit_unit_forenoon" value="" />
-                                    </td>
-
-                                </tr>
-                                <tr>
-                                    <th scope="row">หน่วยการใช้ไฟช่วงบ่าย</th>
-                                    <td><input type="text" class="form-control" id="edit_unit_afternoon"
-                                            name="edit_unit_afternoon" value="" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                        <button type="submit" class="btn btn-primary">บันทึก</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Send Report -->
     <div class="modal fade" id="ModalSendRePort" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">หน้าแก้ไขผู้ใช้งาน</h1>
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">หน้าจัดการ Report</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form class="mui-form" name="frmdeletepower" method="post" action="send_line_report.php">
                     <input type="hidden" class="form-control" id="line_token" name="line_token" value="" />
                     <div class="modal-body">
-                        <table class="table">
-                            <tbody>
-                                <tr>
-                                    <th scope="row">หน่วยการใช้ไฟช่วงเช้า</th>
-                                    <td><input type="text" class="form-control" id="edit_unit_forenoon"
-                                            name="edit_unit_forenoon" value="" />
-                                    </td>
+                        <form method="POST" action="">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">เลือกปี</th>
+                                        <td> 
+                                            <select name="year_select" onchange="this.form.submit()">
+                                                <option value="0">--ทั้งหมด--</option>
+                                                <?php
+                                                    foreach ($result_year_list as $year) {
+                                                        if($year_select == $year['year']){
+                                                            echo '<option value="'.$year['year'].'" selected>'.$year['year'].'</option>'; 
+                                                        }else{
+                                                            echo '<option value="'.$year['year'].'">'.$year['year'].'</option>'; 
+                                                        }
+                                                    }
+                                                ?>
+                                            </select>
+                                        </td>
 
-                                </tr>
-                                <tr>
-                                    <th scope="row">หน่วยการใช้ไฟช่วงบ่าย</th>
-                                    <td><input type="text" class="form-control" id="edit_unit_afternoon"
-                                            name="edit_unit_afternoon" value="" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">เลือกเดือน</th>
+                                        <td>                                
+                                            <select name="month_select" onchange="this.form.submit()">
+                                                <option value="0">--ทั้งหมด--</option>
+                                                <?php
+                                                    foreach ($result_month_list as $month) {
+                                                        if($month_select == $month['month']){
+                                                            echo '<option value="'.$month['month'].'" selected>'.$month['month'].'</option>'; 
+                                                        }else{
+                                                            echo '<option value="'.$month['month'].'">'.$month['month'].'</option>'; 
+                                                        }
+                                                    }
+                                                ?>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -149,6 +141,7 @@ if (!$_SESSION["UserID"]){  //check session
         document.getElementById('edit_unit_afternoon').value = unit_afternoon;
         document.getElementById('edit_power_id').value = power_id;
     }
+
     function SetSendLine(line_token) {
         document.getElementById('line_token').value = line_token;
     }
